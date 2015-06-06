@@ -1,5 +1,6 @@
 from flask import Flask,request
 import datetime
+import time
 import uuid
 from elasticsearch import Elasticsearch
 es = Elasticsearch()
@@ -50,14 +51,13 @@ def addBalance(customerId, amount):
 	return True	
 
 def sendMessage(whoPaid, toWhom, amount, isSuccessful):
-	transactionId = uuid.uuid4()
 	doc = {'whoPaid': whoPaid, 'toWhom': toWhom, 'amount': amount, 'timestamp' : datetime.datetime.utcnow(), 'successful' : isSuccessful}
 	smsText = ("Transaction successful for Rs: "+ str(amount) if isSuccessful else "Transaction failed");
 	sms1 = {'number' : whoPaid, 'text' : smsText}
-	es.index(index="hackathon", doc_type='transaction', id=transactionId, body=doc)
-	es.index(index="hackathon", doc_type='sms', id=datetime.datetime.utcnow(), body=sms1)
+	es.index(index="hackathon", doc_type='transaction', body=doc)
+	es.index(index="hackathon", doc_type='sms', body=sms1)
 	sms2 = {'number' : toWhom,'text' : smsText}
-	es.index(index="hackathon", doc_type='sms', id=datetime.datetime.utcnow(), body=sms2)
+	es.index(index="hackathon", doc_type='sms', body=sms2)
 	return True
 
 if __name__ == "__main__":
